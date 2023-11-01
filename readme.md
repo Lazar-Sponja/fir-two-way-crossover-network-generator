@@ -53,7 +53,6 @@ Or with passband and stopband frequencies as arguments:
 python fir_crossover_taps_generator.py -fp 40 -fa 500 -Aa 80 -fs 48000
 ```
 
-
 The estimated number of taps for this filter is 380. 
 
 ## License
