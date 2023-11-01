@@ -36,17 +36,27 @@ def bellanger_approx(Bt, dp, da, fs=None) -> int:
 parser = argparse.ArgumentParser(description='Generates a text file with taps for 2 way crossover network made of FIR filters')
 
 # parser arguments
-parser.add_argument(
+exclusive_group1 = parser.add_mutually_exclusive_group(required=True)
+exclusive_group2 = parser.add_mutually_exclusive_group(required=True)
+exclusive_group1.add_argument(
     '-fc', '--crossover_frequency', 
-    help='Crossover frequency. If fs is not given, normalization by sampling frequency is assumed', 
+    help='Crossover frequency. If -fs is not set, normalization by sampling frequency is assumed. This argument is mandatory when -fp and -fa are not set.', 
     type=float,
-    required=True
 )
-parser.add_argument(
+exclusive_group2.add_argument(
     '-Bt', '--transition_width', 
+    help='Width of frequency band transition. If -fs is not set, normalization by sampling frequency is assumed. This argument is mandatory when -fp and -fa are not set.', 
+    type=float,
+)
+exclusive_group1.add_argument(
+    '-fp', '--passband_frequency', 
+    help='Passband frequency of filter. If -fs is not set, normalization by sampling frequency is assumed. This argument is mandatory when -fc and -Bt are not set.', 
+    type=float,
+)
+exclusive_group2.add_argument(
+    '-fa', '--stopband_frequency', 
     help='Width of frequency band transition. If fs is not given, normalization by sampling frequency is assumed', 
     type=float,
-    required=True
 )
 parser.add_argument(
     '-Ap', '--passband-attenuation', 
@@ -113,20 +123,26 @@ if args.numtaps_finder is None:
 else:
     numtaps_finder = args.numtaps_finder
 
-# Defining passband and stopband from transition
-fp = args.crossover_frequency - 0.5*args.transition_width
-fa = args.crossover_frequency + 0.5*args.transition_width
+# Defining passband and stopband frequencies
+if args.crossover_frequency is not None:
+    Bt = args.transition_width
+    fp = args.crossover_frequency - 0.5*Bt
+    fa = args.crossover_frequency + 0.5*Bt
+else:
+    fp = args.passband_frequency
+    fa = args.stopband_frequency
+    Bt = fa-fp
 
 #Calculating numtaps
 if args.numtaps is None:
     match numtaps_finder:
         case 'harris':
-            N  = harris_approx(args.transition_width, args.stopband_attenuation, args.sampling_frequency)
+            N  = harris_approx(Bt, args.stopband_attenuation, args.sampling_frequency)
         case 'bellanger':
             if args.passband_attenuation:
                 dp = (10**(0.05*args.passband_attenuation)-1)/(10**(0.05*args.passband_attenuation)+1) #passband ripple
                 da = 10**(-0.05*args.stopband_attenuation) #stopband ripple
-                N = bellanger_approx(args.transition_width, dp, da, fs=args.sampling_frequency)
+                N = bellanger_approx(Bt, dp, da, fs=args.sampling_frequency)
             else:
                 raise ValueError('Passband attenuation must be given when using bellanger')
     print(f'numtaps is estimated as {N}')
