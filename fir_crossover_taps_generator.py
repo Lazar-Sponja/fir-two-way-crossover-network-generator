@@ -104,6 +104,19 @@ parser.add_argument(
 )
 args = parser.parse_args()
 
+if args.crossover_frequency is not None:
+    if args.transition_width is None:
+        raise ValueError('-Bt, --transistion-width flag must be set when using -fc, --crossover-frequency')
+    Bt = args.transition_width
+    fp = args.crossover_frequency - 0.5*Bt
+    fa = args.crossover_frequency + 0.5*Bt
+else:
+    if args.stopband_frequency is None:
+        raise ValueError('-fa, --stopband-frequency flag must be set when using -fp, --passband-frequency')
+    fp = args.passband_frequency
+    fa = args.stopband_frequency
+    Bt = fa-fp
+
 # Parse output path
 if args.output_path is not None: 
     if os.path.isdir(args.output_path):

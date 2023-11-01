@@ -16,9 +16,13 @@ On top of any other packages needed for jupyter notebooks to function
 ## Usage
 `fir_crossover_taps_generator.py` is intended to be used as a command line program, and as such comes with a number of flags:
 
-- `-fc`, `--crossover_frequency` - Crossover frequency. If `-fs` is not given, normalization by sampling frequency is assumed. This flag is **mandatory**
+- `-fc`, `--crossover_frequency` - Crossover frequency. If `-fs` is not given, normalization by sampling frequency is assumed. This flag is **mandatory** unless `-fp` and `-fa` are set, in which case they are conflicting arguments.
 
-- `-Bt`, `--transition_width` - Width of frequency band transition. If `-fs` is not given, normalization by sampling frequency is assumed This flag is **mandatory**
+- `-Bt`, `--transition_width` - Width of frequency band transition. If `-fs` is not given, normalization by sampling frequency is assumed This flag is **mandatory**, This flag is **mandatory** unless `-fp` and `-fa` are set, in which case they are conflicting arguments.
+
+- `-fp`, `--passband_frequency` - Passband frequency. If `-fs` is not given, normalization by sampling frequency is assumed. This flag is **mandatory** unless `-fc` and `-Bt` are set, in which case they are conflicting arguments.
+
+- `-fa`, `--stopband_frequency` - Stopband frequency. If `-fs` is not given, normalization by sampling frequency is assumed. This flag is **mandatory** unless `-fc` and `-Bt` are set, in which case they are conflicting arguments.
 
 - `-Aa`, `--stopband_attenuation` - Desired stopband attenuation in dB. If `-N` is not given, this flag along width `-Ap` is used to estimate the number of taps needed to reach desired attenuation. This flag is **mandatory if `-N` is not set**. This flag is mandatory when using `-w` option, even when `-N` is set.
 
