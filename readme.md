@@ -41,11 +41,19 @@ On top of any other packages needed for jupyter notebooks to function
 - `-fs` , `--sampling-frequency` - Sampling frequency. If not specified, inputs are assumed to be normalized by sampling frequency. If specified, input frequencies need to be in Hz. This flag is optional
 
 ## Example 
-The following example generates a crossover network with a crossover frequency of 270Hz, Transition width of 460Hz, desired attenuation of 80dB, and sampling frequency of 48kHz
+The following example generates a crossover network with a crossover frequency of 270Hz, Transition width of 460Hz, desired attenuation of 80dB, and sampling frequency of 48kHz:
 
 ```sh
 python fir_crossover_taps_generator.py -fc 270 -Bt 460 -Aa 80 -fs 48000
 ```
+
+Or with passband and stopband frequencies as arguments:
+
+```sh
+python fir_crossover_taps_generator.py -fp 40 -fa 500 -Aa 80 -fs 48000
+```
+
+
 The estimated number of taps for this filter is 380. 
 
 ## License
