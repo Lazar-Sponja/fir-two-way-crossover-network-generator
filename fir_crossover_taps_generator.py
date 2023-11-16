@@ -46,9 +46,9 @@ def parse_stringformat(fmt:str):
     Returns:
         n_word, n_frac: number of bits for word and fraction parts, respectively
     """
-    fmt.casefold()
+    fmt = fmt.casefold()
     if re.match(r'q\d+.\d+', fmt):
-        n_list = re.findall(r'd+', fmt)
+        n_list = re.findall(r'\d+', fmt)
     elif re.match(r'fxp-s\d+/\d', fmt):
         n_list = re.findall(r'\d+', fmt)
     else:
