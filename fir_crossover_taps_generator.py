@@ -1,6 +1,6 @@
+import argparse, os, re
 import numpy as np 
 import scipy.signal as signal
-import argparse, os
 
 # Tap estimator algorithms
 def harris_approx(Bt, Aa, fs=None) -> int:
@@ -31,6 +31,29 @@ def bellanger_approx(Bt, dp, da, fs=None) -> int:
     """
     Bt /= fs if fs is not None else Bt
     return int(np.ceil(2*np.log10(1/(10*dp*da))/(3*Bt)))
+    
+# Parse format string to print values as fxp
+def parse_stringformat(fmt:str):
+    """Parse arm q format or fxpmath string and return number of bits for word and fraction part
+
+    Args:
+        fmt (str): String to parse. Must be arm either arm q format `Qm.n` or fxp signed format `fxp-sn/m`. 
+        Capitalization is ignored.
+
+    Raises:
+        ValueError: Wrong string format has been passed
+
+    Returns:
+        n_word, n_frac: number of bits for word and fraction parts, respectively
+    """
+    fmt.casefold()
+    if re.match(r'q\d+.\d+', fmt):
+        n_list = re.findall(r'd+', fmt)
+    elif re.match(r'fxp-s\d+/\d', fmt):
+        n_list = re.findall(r'\d+', fmt)
+    else:
+        raise ValueError('Fixed point format string must be in signed arm `Qm.n` notation or signed fxpmath format `fxp-sm/n`')
+    return int(n_list[0]), int(n_list[1])
 
 # Arugmet parser instance
 parser = argparse.ArgumentParser(description='Generates a text file with taps for 2 way crossover network made of FIR filters')
@@ -102,8 +125,19 @@ parser.add_argument(
     default=None, 
     type=float
 )
+parser.add_argument(
+    '-fxp', '--fixed-point-format',
+    help='How to represent of output taps. Accepts any string fxp math would accept as it\'s `dtype` argument',
+    type=str,
+)
+parser.add_argument(
+    '-fxpo', '--fixed-point-only',
+    help='Export taps in only in fixed point format',
+    action='store_true'
+)
 args = parser.parse_args()
 
+# Parse if correct frequency pair has been given
 if args.crossover_frequency is not None:
     if args.transition_width is None:
         raise ValueError('-Bt, --transistion-width flag must be set when using -fc, --crossover-frequency')
@@ -182,13 +216,20 @@ Hid_hp = [0, 0, 1, 1]   #Ideal filter response hp
 match args.fir_algorithm:
     case 'firls':
         h_lp = signal.firls(N if N % 2 else N-1, F, Hid_lp, W_lp, fs=args.sampling_frequency)
-        h_hp= signal.firls(N if N % 2 else N-1, F, Hid_hp, W_hp, fs=args.sampling_frequency)
+        h_hp = signal.firls(N if N % 2 else N-1, F, Hid_hp, W_hp, fs=args.sampling_frequency)
     case 'remez':
         h_lp = signal.remez(N, F, Hid_lp[::2], W_lp, fs=args.sampling_frequency)
-        h_hp= signal.remez(N if N % 2 else N-1, F, Hid_hp[::2], W_hp, fs=args.sampling_frequency)
+        h_hp = signal.remez(N if N % 2 else N-1, F, Hid_hp[::2], W_hp, fs=args.sampling_frequency)
         
 #Save taps to txt file
-np.savetxt(lowpass, h_lp)
-np.savetxt(highpass,h_hp)
+if args.fixed_point_format is not None:
+    lowpass_fxp = os.path.splitext(lowpass)[0] + '_fxp.txt'
+    highpass_fxp = os.path.splitext(highpass)[0] +  '_fxp.txt'
+    n_word, n_frac = parse_stringformat(args.fixed_point_format)
+    np.savetxt(lowpass_fxp, np.round(h_lp*2**n_frac), fmt='%d')
+    np.savetxt(highpass_fxp, np.round(h_hp*2**n_frac), fmt='%d') 
+if not args.fixed_point_only:
+    np.savetxt(lowpass, h_lp)
+    np.savetxt(highpass,h_hp)
 
 
