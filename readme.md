@@ -38,7 +38,7 @@ On top of any other packages needed for jupyter notebooks to function
 
 - `-o`, `-output-path` - Output tap for filter taps. Defaults to current directory. This flag is optional. 
 
-- `-fxp`, `--fixed-point-format` - Specify format which fixed point values will be generated with. Format must be specified in either arm Q notation `Qm.n` or in fxpmath `fxp-sm/n`.
+- `-fxp`, `--fixed-point-format` - Specify format which fixed point values will be generated with. Format must be specified in either arm Q notation `Qm.n`, q format with just fraction part specified `Qn` or in fxpmath `fxp-sm/n`.
 
 - `-fxpo`, `--fixed-point-only` - Generate only fixed point output.
 

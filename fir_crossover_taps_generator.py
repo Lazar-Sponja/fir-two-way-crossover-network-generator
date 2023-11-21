@@ -37,7 +37,8 @@ def parse_stringformat(fmt:str):
     """Parse arm q format or fxpmath string and return number of bits for word and fraction part
 
     Args:
-        fmt (str): String to parse. Must be arm either arm q format `Qm.n` or fxp signed format `fxp-sn/m`. 
+        fmt (str): String to parse. Must be arm either arm q format `Qm.n`, q format with only fraction length specified `Qn` 
+        or fxp signed format `fxp-sn/m`. 
         Capitalization is ignored.
 
     Raises:
@@ -49,11 +50,19 @@ def parse_stringformat(fmt:str):
     fmt = fmt.casefold()
     if re.match(r'q\d+.\d+', fmt):
         n_list = re.findall(r'\d+', fmt)
+        n_word = int(n_list[0])
+        n_frac = int(n_list[1])
+    elif re.match(r'q\d+', fmt):
+        n_list = re.findall(r'\d+', fmt)
+        n_frac = int(n_list[0])
+        n_word = n_frac+1
     elif re.match(r'fxp-s\d+/\d', fmt):
         n_list = re.findall(r'\d+', fmt)
+        n_word = int(n_list[0])
+        n_frac = int(n_list[1])
     else:
         raise ValueError('Fixed point format string must be in signed arm `Qm.n` notation or signed fxpmath format `fxp-sm/n`')
-    return int(n_list[0]), int(n_list[1])
+    return n_word, n_frac
 
 # Arugmet parser instance
 parser = argparse.ArgumentParser(description='Generates a text file with taps for 2 way crossover network made of FIR filters')
@@ -226,8 +235,8 @@ if args.fixed_point_format is not None:
     lowpass_fxp = os.path.splitext(lowpass)[0] + '_fxp.txt'
     highpass_fxp = os.path.splitext(highpass)[0] +  '_fxp.txt'
     n_word, n_frac = parse_stringformat(args.fixed_point_format)
-    np.savetxt(lowpass_fxp, np.round(h_lp*2**n_frac), fmt='%d')
-    np.savetxt(highpass_fxp, np.round(h_hp*2**n_frac), fmt='%d') 
+    np.savetxt(lowpass_fxp, np.clip(np.round(h_lp*2**n_frac), -2**(n_word-1), 2**(n_word-1)-1), fmt='%d') # turn to fixedpoint and saturate
+    np.savetxt(highpass_fxp, np.clip(np.round(h_hp*2**n_frac), -2**(n_word-1), 2**(n_word-1)-1), fmt='%d') 
 if not args.fixed_point_only:
     np.savetxt(lowpass, h_lp)
     np.savetxt(highpass,h_hp)
